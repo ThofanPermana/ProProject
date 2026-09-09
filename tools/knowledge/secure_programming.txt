@@ -1,0 +1,202 @@
+# Secure Programming & Python for Security
+
+## Secure Coding Principles
+
+### Input Validation
+Never trust user input. Validate on the server side.
+```python
+import re
+
+def validate_email(email: str) -> bool:
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email)) and len(email) <= 254
+
+def sanitize_filename(filename: str) -> str:
+    # Remove path traversal characters
+    return os.path.basename(filename).replace('..', '')
+```
+
+### SQL Injection Prevention
+Always use parameterized queries, never string concatenation.
+```python
+# INSECURE - vulnerable to SQL injection
+cursor.execute(f"SELECT * FROM users WHERE username = '{username}'")
+
+# SECURE - parameterized query
+cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+
+# SQLAlchemy ORM (also safe)
+user = session.query(User).filter_by(username=username).first()
+```
+
+### Password Hashing
+Never store plaintext passwords. Use bcrypt, Argon2, or scrypt.
+```python
+import bcrypt
+
+# Hash password
+password = b"user_password_here"
+hashed = bcrypt.hashpw(password, bcrypt.gensalt(rounds=12))
+
+# Verify password
+is_valid = bcrypt.checkpw(password, hashed)
+```
+
+### Environment Variables for Secrets
+Never hardcode credentials in source code.
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+API_KEY = os.environ.get("API_KEY")  # From .env file
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# .env file should be in .gitignore
+# Use .env.example with dummy values for documentation
+```
+
+### Secure Random Numbers
+Use cryptographically secure random number generator for security purposes.
+```python
+import secrets
+
+# Secure token generation
+token = secrets.token_urlsafe(32)  # URL-safe base64 token
+otp = secrets.randbelow(1000000)   # 6-digit OTP
+
+# NOT secure for security purposes (use only for non-security random)
+import random
+random.randint(0, 100)  # Predictable, don't use for tokens/keys
+```
+
+## Python Security Tools Development
+
+### HTTP Requests with Security Headers
+```python
+import httpx
+
+headers = {
+    "User-Agent": "SecurityScanner/1.0",
+    "X-Custom-Header": "value"
+}
+# Use verify=True (default) to verify SSL certificates
+async with httpx.AsyncClient(verify=True, timeout=10) as client:
+    response = await client.get(url, headers=headers)
+```
+
+### Port Scanner (Educational)
+```python
+import socket
+import asyncio
+
+async def scan_port(host: str, port: int) -> bool:
+    try:
+        _, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port), 
+            timeout=1.0
+        )
+        writer.close()
+        return True
+    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
+        return False
+
+async def scan_ports(host: str, ports: list[int]) -> dict[int, bool]:
+    results = {}
+    for port in ports:
+        results[port] = await scan_port(host, port)
+    return results
+```
+
+### Hash Calculation
+```python
+import hashlib
+
+def hash_file(filepath: str) -> dict[str, str]:
+    """Calculate multiple hash types for a file."""
+    hashes = {
+        'md5': hashlib.md5(),
+        'sha1': hashlib.sha1(),
+        'sha256': hashlib.sha256(),
+    }
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            for h in hashes.values():
+                h.update(chunk)
+    return {name: h.hexdigest() for name, h in hashes.items()}
+```
+
+### OSINT with Python
+```python
+import socket
+import whois  # pip install python-whois
+
+def get_ip(domain: str) -> str:
+    return socket.gethostbyname(domain)
+
+def get_whois(domain: str) -> dict:
+    w = whois.whois(domain)
+    return {
+        'registrar': w.registrar,
+        'creation_date': w.creation_date,
+        'expiration_date': w.expiration_date,
+        'name_servers': w.name_servers,
+    }
+```
+
+## Keamanan Aplikasi Web dengan Python/Flask/FastAPI
+
+### FastAPI Security Best Practices
+```python
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+app = FastAPI()
+security = HTTPBearer()
+
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    if not is_valid_token(token):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return token
+
+@app.get("/protected", dependencies=[Depends(verify_token)])
+async def protected_route():
+    return {"message": "Access granted"}
+```
+
+### Rate Limiting
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@app.get("/login")
+@limiter.limit("5/minute")  # Max 5 requests per minute per IP
+async def login(request: Request):
+    pass
+```
+
+## Analisis Keamanan Log
+```python
+import re
+from collections import Counter
+
+def analyze_failed_logins(log_file: str) -> dict:
+    """Detect brute force attempts from Apache/Nginx logs."""
+    failed_ips = []
+    pattern = r'(\d+\.\d+\.\d+\.\d+).* 401'
+    
+    with open(log_file) as f:
+        for line in f:
+            match = re.search(pattern, line)
+            if match:
+                failed_ips.append(match.group(1))
+    
+    counts = Counter(failed_ips)
+    # Flag IPs with >10 failed attempts
+    suspicious = {ip: count for ip, count in counts.items() if count > 10}
+    return suspicious
+```

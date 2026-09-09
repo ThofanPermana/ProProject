@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════
+  PANDUAN DEPLOY HERMES KE RUNPOD (Persistent Pod)
+═══════════════════════════════════════════════════════
+
+PERSIAPAN
+─────────
+1. Install Docker Desktop di PC lokal
+2. Buat akun di: https://runpod.io
+3. Buat akun di Docker Hub: https://hub.docker.com
+
+STEP 1 — BUILD & PUSH IMAGE
+────────────────────────────
+Buka terminal di folder d:\Hermes\ lalu jalankan:
+
+  docker build -t <dockerhub_username>/hermes-agent:latest .
+  docker login
+  docker push <dockerhub_username>/hermes-agent:latest
+
+Contoh jika username Docker Hub kamu "thofa":
+  docker build -t thofa/hermes-agent:latest .
+  docker push thofa/hermes-agent:latest
+
+
+STEP 2 — BUAT POD DI RUNPOD
+─────────────────────────────
+1. Login ke https://runpod.io/console/pods
+2. Klik [+ Deploy]
+3. Pilih:
+   - Template: "RunPod Pytorch 2.2.0" atau klik "Custom"
+   - Container Image: thofa/hermes-agent:latest   ← isi sesuai nama kamu
+   - Pod Type: CPU (murah, bot tidak butuh GPU)
+     Pilih "1 vCPU, 2 GB RAM" saja sudah cukup
+4. Klik [Environment Variables] dan isi:
+
+   TELEGRAM_TOKEN     = <isi dari BotFather>
+   ANTHROPIC_API_KEY  = <isi jika pakai Claude>
+   GROQ_API_KEY       = <isi jika pakai Groq>
+   OLLAMA_URL         = (kosongkan jika tidak pakai Ollama lokal)
+   BRAVE_API_KEY      = <opsional>
+   EXA_API_KEY        = <opsional>
+   GAMMA_API_KEY      = <opsional>
+   FAL_KEY            = <opsional>
+
+5. Container Disk: minimal 5 GB
+6. Klik [Deploy]
+
+Bot langsung jalan 24/7 setelah pod aktif.
+
+
+STEP 3 — MONITORING
+─────────────────────
+- Lihat log: RunPod Console → pod kamu → [Logs]
+- Bot restart otomatis jika crash (RunPod restart policy)
+
+
+UPDATE BOT (jika ada perubahan kode)
+──────────────────────────────────────
+1. Build ulang & push:
+     docker build -t thofa/hermes-agent:latest .
+     docker push thofa/hermes-agent:latest
+
+2. Di RunPod Console: Stop pod → Edit → Update image → Start lagi
+   Atau hapus pod lama dan buat baru dengan image terbaru.
+
+
+BIAYA ESTIMASI
+───────────────
+- CPU pod 1 vCPU 2GB RAM: ~$0.02–0.05 / jam
+- 24 jam × 30 hari ≈ $15–36 / bulan
+- Jauh lebih murah dari GPU pod jika tidak pakai HF lokal
+
+Untuk info harga terbaru: https://runpod.io/pricing
+
+
+JIKA INGIN GUNAKAN OLLAMA DI RUNPOD
+─────────────────────────────────────
+Swap base image di Dockerfile ke GPU image:
+  FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+
+Lalu install Ollama di start.sh sebelum python main.py:
+  curl -fsSL https://ollama.com/install.sh | sh
+  ollama serve &
+  sleep 5
+  ollama pull llama3.2
+
+Set env var:
+  OLLAMA_URL = http://localhost:11434
+  OLLAMA_MODEL = llama3.2
+═══════════════════════════════════════════════════════

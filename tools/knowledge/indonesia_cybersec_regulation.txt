@@ -1,0 +1,117 @@
+# Regulasi & Keamanan Siber Indonesia
+
+## BSSN (Badan Siber dan Sandi Negara)
+BSSN dibentuk berdasarkan Peraturan Presiden Nomor 28 Tahun 2021. Tugas utama:
+- Melaksanakan keamanan siber secara efektif dan efisien
+- Koordinasi di bidang keamanan siber dengan K/L dan instansi terkait
+- Pemantauan, deteksi, dan penanggulangan ancaman siber nasional
+- Penyusunan kebijakan teknis di bidang keamanan siber
+- Pelaksanaan penanggulangan insiden siber nasional
+
+Kontak: bssn.go.id | CSIRT nasional: id-cert.or.id
+
+## Undang-Undang ITE (No. 11 Tahun 2008, diubah No. 19 Tahun 2016, revisi 2023)
+
+### Pasal yang Relevan untuk Keamanan Siber:
+- **Pasal 30**: Melarang akses ilegal ke sistem elektronik orang lain
+  - Ayat 1: Akses tanpa izin
+  - Ayat 2: Akses untuk memperoleh informasi/dokumen elektronik
+  - Ayat 3: Akses dengan cara melanggar, menerobos, melampaui sistem pengamanan
+  - Ancaman: 6-8 tahun penjara dan/atau denda 600-800 juta rupiah
+
+- **Pasal 31**: Larangan intersepsi ilegal
+  - Transmisi elektronik tanpa hak
+  - Kecuali untuk penegakan hukum yang sah
+
+- **Pasal 32**: Larangan mengubah, menambah, mengurangi, memindahkan data elektronik tanpa hak
+  - Termasuk pembukaan informasi rahasia
+
+- **Pasal 33**: Larangan tindakan yang mengakibatkan gangguan sistem elektronik
+
+- **Pasal 34**: Larangan memproduksi/menyebarkan alat/perangkat untuk melakukan Pasal 27-33
+
+### Pengecualian Legal untuk Pentest:
+Penetration testing legal apabila:
+1. Ada kontrak/perjanjian tertulis yang sah
+2. Scope pengujian jelas dan terdokumentasi
+3. Dilakukan oleh profesional bersertifikat
+4. Laporan diserahkan kepada pemilik sistem
+5. Tidak ada akses di luar scope yang disepakati
+
+## Kerangka Keamanan Siber Nasional (KKSN)
+
+Berdasarkan Perpres No. 82 Tahun 2022 tentang Perlindungan Infrastruktur Informasi Vital (IIV):
+
+**Sektor IIV yang dilindungi:**
+- Pemerintahan
+- Energi dan Sumber Daya Mineral
+- Transportasi
+- Keuangan
+- Kesehatan
+- Teknologi Informasi dan Komunikasi
+- Pangan
+
+**Kewajiban Pengelola IIV:**
+1. Memiliki kebijakan keamanan siber
+2. Melakukan penilaian risiko minimal 1 tahun sekali
+3. Melaporkan insiden siber ke BSSN dalam 14 jam
+4. Memiliki rencana pemulihan (BCP/DRP)
+
+## Standar Keamanan untuk Instansi Pemerintah
+
+### SNI ISO/IEC 27001:2022
+Standar internasional untuk SMKI (Sistem Manajemen Keamanan Informasi):
+- Annex A: 93 kontrol keamanan dikelompokkan dalam 4 tema
+- Wajib untuk operator infrastruktur informasi vital
+- Sertifikasi berlaku 3 tahun, surveillance audit tahunan
+
+### NIST Cybersecurity Framework (CSF 2.0)
+Banyak digunakan K/L sebagai referensi:
+- **Govern**: Tata kelola risiko keamanan siber
+- **Identify**: Identifikasi aset dan risiko
+- **Protect**: Implementasi safeguard
+- **Detect**: Deteksi kejadian keamanan siber
+- **Respond**: Respons terhadap insiden
+- **Recover**: Pemulihan pasca insiden
+
+### Klasifikasi Data Pemerintah (Perpres No. 95 Tahun 2018)
+- **Sangat Rahasia**: Informasi yang jika bocor bisa membahayakan negara
+- **Rahasia**: Informasi terbatas yang jika bocor bisa merugikan instansi/negara
+- **Terbatas**: Informasi yang hanya untuk kalangan terbatas
+- **Biasa/Terbuka**: Informasi yang boleh diakses publik
+
+## CSIRT/SOC untuk Instansi Pemerintah
+
+### Pembentukan CSIRT (Computer Security Incident Response Team)
+Berdasarkan Peraturan BSSN No. 6 Tahun 2020:
+1. Bentuk tim CSIRT minimal 5 orang
+2. Daftarkan ke BSSN dan id-CSIRT
+3. Buat prosedur penanganan insiden (SOP)
+4. Integrasi dengan National CSIRT (BSSN)
+5. Lakukan pelatihan dan simulasi minimal 1 tahun sekali
+
+### Kategori Insiden Siber (BSSN)
+- **Kategori 1 (Rendah)**: Scan, probe, phishing massal
+- **Kategori 2 (Sedang)**: Unauthorized access, defacement, DoS
+- **Kategori 3 (Tinggi)**: Compromise sistem kritis, data breach
+- **Kategori 4 (Kritis)**: Gangguan IIV, serangan ke infrastruktur negara
+
+## Kominfo & Tata Kelola Internet Indonesia
+
+**Kementerian Komunikasi dan Informatika (Kominfo):**
+- Regulasi telekomunikasi dan internet
+- Pengawasan konten digital
+- Pengelolaan domain .id (bersama PANDI)
+- Kebijakan data center dan cloud pemerintah
+
+**Trust+ (Internet Positif) — Filter Konten:**
+- Sistem pemblokiran konten ilegal
+- Kategori: CSAM, terorisme, judi online, hoaks, dll
+- Operator wajib mematuhi daftar blokir Kominfo
+- Koordinasi dengan BSSN untuk ancaman siber
+
+**PDN (Pusat Data Nasional):**
+- Konsolidasi data center K/L
+- PDN Sementara 1: Tangerang (Telkomsigma)
+- PDN Sementara 2: Surabaya (Lintasarta)
+- Insiden ransomware LockBit 3.0 Juni 2024 — pelajaran pentingnya backup dan BCP

@@ -1,0 +1,42 @@
+# Secrets and local configuration
+.env
+!.env.example
+
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Hermes runtime state and generated files
+.hermes.lock
+memory/data/
+memory/rag/*
+output/
+outputs/
+dork.txt
+
+# Scraper captures and generated datasets
+tools/_*
+tools/*.csv
+tools/dpr_*.json
+tools/dpr_*.txt
+tools/kabinet_*.json
+tools/kabinet_*.txt
+tools/sekolah_*.txt
+tools/*_log.txt
+tools/auto_dataset.jsonl
+tools/qa_pairs.jsonl
+
+# Local tools and editor files
+.vscode/
+.idea/
+*.log
+*.swp
+
+# OS files
+Thumbs.db
+.DS_Store

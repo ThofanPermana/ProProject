@@ -1,0 +1,34 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local secrets — NEVER bake into image
+.env
+
+# Windows-specific
+start.bat
+*.bat
+
+# Lock file
+.hermes.lock
+
+# Local outputs (besar, tidak perlu di image)
+output/
+outputs/
+memory/
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.vscode/
+*.swp

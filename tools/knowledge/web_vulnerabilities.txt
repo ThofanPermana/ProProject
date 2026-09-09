@@ -1,0 +1,80 @@
+# OWASP Top 10 Web Vulnerabilities (2021)
+
+## A01: Broken Access Control (Kontrol Akses Rusak)
+Users can act outside their intended permissions.
+- Examples: IDOR (Insecure Direct Object Reference), privilege escalation, missing function-level access control
+- Impact: Unauthorized data access, modification, or deletion
+- Mitigation: Deny by default, enforce access controls server-side, log failures
+- Example: Changing URL from `/user/123/profile` to `/user/124/profile` and accessing another user's data
+
+## A02: Cryptographic Failures (Kegagalan Kriptografi)
+Sensitive data exposed due to weak/missing encryption.
+- Examples: HTTP instead of HTTPS, MD5 for password hashing, hardcoded keys, weak cipher suites
+- Impact: Data breaches, credential theft
+- Mitigation: Use TLS 1.3, bcrypt/Argon2 for passwords, AES-256 for data, never store plaintext passwords
+
+## A03: Injection (Injeksi)
+Attacker sends hostile data to an interpreter.
+- **SQL Injection**: `' OR '1'='1` bypasses login. Use parameterized queries/prepared statements.
+- **Command Injection**: Input like `; rm -rf /` executed by OS. Avoid shell=True in Python.
+- **LDAP Injection**: Malicious LDAP queries.
+- **XPath Injection**: Manipulating XML database queries.
+- Mitigation: Input validation, parameterized queries, ORMs, least privilege DB accounts
+
+## A04: Insecure Design (Desain Tidak Aman)
+Missing or ineffective security controls in design phase.
+- Examples: No rate limiting on login (brute force), no CAPTCHA, insufficient business logic validation
+- Mitigation: Threat modeling, secure design patterns, reference architectures
+
+## A05: Security Misconfiguration (Miskonfigurasi Keamanan)
+Most commonly seen issue.
+- Examples: Default credentials (admin:admin), directory listing enabled, unnecessary features enabled, verbose error messages, missing security headers
+- Mitigation: Harden configurations, disable unnecessary features, change defaults, automated config scanning
+
+## A06: Vulnerable and Outdated Components
+Using libraries/frameworks with known vulnerabilities.
+- Examples: Old jQuery with XSS vulnerabilities, Log4Shell (Log4j CVE-2021-44228), Struts2 RCE
+- Mitigation: Software Composition Analysis (SCA), regular patching, vulnerability tracking (CVE feeds)
+
+## A07: Identification and Authentication Failures
+Weaknesses in authentication implementation.
+- Examples: Weak passwords allowed, no MFA, session IDs in URLs, session not invalidated on logout, credential stuffing vulnerabilities
+- Mitigation: Implement MFA, use strong session management, lock accounts after failed attempts, use NIST password guidelines
+
+## A08: Software and Data Integrity Failures
+Code and infrastructure that does not protect against integrity violations.
+- Examples: Using unsigned npm packages, auto-update without signature verification, insecure deserialization
+- Log4Shell exploited deserialization
+- Mitigation: Digital signatures, supply chain verification, integrity checks on CI/CD
+
+## A09: Security Logging and Monitoring Failures
+Insufficient logging leads to undetected breaches.
+- Log: Failed logins, access control failures, input validation failures
+- Logs should NOT contain: passwords, credit card numbers, PII
+- Mitigation: Centralized SIEM (Security Information and Event Management), alerting, log integrity
+
+## A10: Server-Side Request Forgery (SSRF)
+Server fetches a user-supplied URL, allowing access to internal resources.
+- Example: `url=http://169.254.169.254/latest/meta-data/` (AWS metadata)
+- Impact: Access to internal services, cloud metadata, local files via file:// scheme
+- Mitigation: Allowlist of permitted URLs, block internal IP ranges, disable unused URI schemes
+
+## Other Common Web Vulnerabilities
+
+### Cross-Site Scripting (XSS)
+- **Reflected XSS**: Script in URL parameter reflected in response
+- **Stored XSS**: Script saved in database, executed when page loaded
+- **DOM XSS**: Client-side JavaScript manipulation
+- Mitigation: Output encoding, Content Security Policy (CSP), input validation
+
+### CSRF (Cross-Site Request Forgery)
+Tricks authenticated user's browser into sending unintended requests.
+- Mitigation: CSRF tokens, SameSite cookie attribute, checking Origin header
+
+### XXE (XML External Entity)
+Malicious XML references external entities.
+- Mitigation: Disable DTD processing, use JSON instead of XML where possible
+
+### Path Traversal
+`../../../etc/passwd` to access files outside intended directory.
+- Mitigation: Canonicalize paths, allowlist file access, chroot jails

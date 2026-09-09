@@ -1,0 +1,116 @@
+# Network Security & Tools (Educational Reference)
+
+## Network Security Fundamentals
+
+### OSI Model (Relevant Security Layers)
+- Layer 7 (Application): HTTP/S, DNS, FTP, SMTP — WAF, App firewalls
+- Layer 4 (Transport): TCP/UDP — stateful firewalls, rate limiting
+- Layer 3 (Network): IP routing — network firewalls, IPS
+- Layer 2 (Data Link): MAC addresses — ARP spoofing, 802.1X
+
+### Common Ports (Security Relevant)
+- 21: FTP (often insecure, use SFTP/FTPS)
+- 22: SSH (secure remote access)
+- 23: Telnet (insecure, plaintext)
+- 25: SMTP (email)
+- 53: DNS (UDP/TCP)
+- 80: HTTP (unencrypted web)
+- 443: HTTPS (encrypted web)
+- 3306: MySQL
+- 3389: RDP (Windows Remote Desktop)
+- 445: SMB (Windows file sharing — EternalBlue vulnerability)
+- 8080, 8443: Alternative HTTP/HTTPS
+- 6379: Redis (often exposed without auth)
+- 27017: MongoDB (often exposed without auth)
+
+### Firewall Types
+- **Packet Filter**: Stateless, basic IP/port rules
+- **Stateful Firewall**: Tracks connection state (most common)
+- **Next-Gen Firewall (NGFW)**: Application awareness, IPS, SSL inspection
+- **WAF (Web Application Firewall)**: Protects web apps (ModSecurity, Cloudflare WAF)
+
+### IDS vs IPS
+- **IDS (Intrusion Detection System)**: Detects and ALERTS — passive
+- **IPS (Intrusion Prevention System)**: Detects and BLOCKS — active
+- Examples: Snort, Suricata (open source), Cisco Firepower, Palo Alto
+
+## Security Tools (Educational Overview)
+
+### Nmap (Network Mapper)
+Open-source port scanner and network discovery tool.
+```
+nmap -sV -sC -p- <target>   # Full scan with service detection and scripts
+nmap -sn 192.168.1.0/24     # Ping scan (host discovery)
+nmap -A <target>            # Aggressive scan (OS detection, scripts, traceroute)
+nmap --script vuln <target> # Run vulnerability scripts
+```
+Always use only on systems you own or have permission to test.
+
+### Wireshark / tcpdump
+Packet capture and analysis tools.
+- Wireshark: GUI-based packet analyzer
+- tcpdump: Command-line packet capture
+- Use for: Network troubleshooting, protocol analysis, capturing plaintext credentials in lab environments
+- `tcpdump -i eth0 -w capture.pcap port 80`
+
+### Burp Suite
+Web application security testing platform.
+- **Proxy**: Intercept and modify HTTP/S requests
+- **Scanner**: Automated vulnerability scanning (Pro version)
+- **Intruder**: Automated attack tool (fuzzing, brute force)
+- **Repeater**: Manually replay/modify requests
+- Community edition is free, Professional requires license
+
+### Metasploit Framework
+Most widely used penetration testing framework.
+- Contains exploit modules, payloads, auxiliary modules
+- `msfconsole`: Main interface
+- `search <vulnerability>`: Find relevant modules
+- `use <module>`: Select module
+- `show options`: Display required settings
+- Only for authorized testing on systems you own or have permission
+
+### SQLMap
+Automated SQL injection detection and exploitation tool.
+- `sqlmap -u "http://target.com/page?id=1" --dbs`: List databases
+- `sqlmap -u "http://target.com/page?id=1" --dump`: Dump data
+- Requires authorization to use legally
+
+### Nikto
+Web server vulnerability scanner.
+- `nikto -h http://target.com`: Basic scan
+- Detects outdated software, misconfigurations, default files
+
+### Gobuster / Dirb / Feroxbuster
+Directory and file brute-forcing tools.
+- Find hidden directories and files on web servers
+- `gobuster dir -u http://target.com -w /usr/share/wordlists/dirb/common.txt`
+
+### John the Ripper / Hashcat
+Password cracking tools for security audits.
+- Used to test password strength
+- John: `john --wordlist=rockyou.txt hash.txt`
+- Hashcat: GPU-accelerated, supports 300+ hash types
+- Only use on hashes you own or have authorization
+
+## Network Attack Techniques (Defensive Knowledge)
+
+### ARP Spoofing/Poisoning
+- Attacker sends fake ARP replies to link their MAC to another IP
+- Enables MitM on local network
+- Defense: Dynamic ARP Inspection (DAI), static ARP entries, network segmentation
+
+### DNS Attacks
+- **DNS Spoofing/Cache Poisoning**: Corrupting DNS cache to redirect users
+- **DNS Hijacking**: Redirecting DNS queries to malicious server
+- **DNS Tunneling**: Using DNS protocol to exfiltrate data (bypasses firewalls)
+- Defense: DNSSEC, encrypted DNS (DoH/DoT), monitoring
+
+### SSL Stripping
+Downgrading HTTPS to HTTP in MitM position.
+Defense: HSTS (HTTP Strict Transport Security), HSTS preloading
+
+### Port Scanning Detection
+- Connection rate monitoring
+- IDS/IPS rules for Nmap signatures
+- Honeypots/honeytokens

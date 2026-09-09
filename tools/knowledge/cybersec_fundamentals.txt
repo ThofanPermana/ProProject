@@ -1,0 +1,53 @@
+# Cybersecurity Fundamentals
+
+## CIA Triad
+The CIA Triad is the foundation of information security:
+- **Confidentiality**: Ensuring data is accessible only to authorized parties. Techniques include encryption, access controls, and data classification.
+- **Integrity**: Ensuring data is accurate and has not been tampered with. Techniques include hashing (SHA-256, MD5), digital signatures, and checksums.
+- **Availability**: Ensuring systems and data are accessible when needed. Protected through redundancy, backups, DDoS mitigation, and failover systems.
+
+## Types of Threats
+- **Malware**: Viruses, trojans, ransomware, spyware, adware, rootkits, worms
+- **Phishing**: Social engineering via email/SMS/voice to steal credentials
+- **Man-in-the-Middle (MitM)**: Intercepting communication between two parties
+- **SQL Injection**: Inserting malicious SQL into input fields to manipulate databases
+- **Cross-Site Scripting (XSS)**: Injecting scripts into web pages viewed by other users
+- **Denial of Service (DoS/DDoS)**: Overwhelming systems to make them unavailable
+- **Zero-Day Exploits**: Vulnerabilities not yet known to vendors/defenders
+- **Insider Threats**: Malicious or negligent actions by internal employees
+
+## Defense in Depth
+Security layering strategy using multiple controls:
+1. Physical security (locks, badges)
+2. Network security (firewalls, segmentation)
+3. Host security (antivirus, patching)
+4. Application security (input validation, WAF)
+5. Data security (encryption, DLP)
+6. User awareness training
+
+## Authentication vs Authorization
+- **Authentication**: Verifying WHO you are (username/password, MFA, biometrics)
+- **Authorization**: Verifying WHAT you can do (RBAC, ACLs, permissions)
+- **Multi-Factor Authentication (MFA)**: Something you know + something you have + something you are
+
+## Common Security Standards and Frameworks
+- **NIST Cybersecurity Framework**: Identify, Protect, Detect, Respond, Recover
+- **ISO 27001**: Information security management systems
+- **OWASP**: Open Web Application Security Project — free web security resources
+- **PCI DSS**: Payment card industry data security standard
+- **GDPR**: General Data Protection Regulation (EU data privacy law)
+- **SOC 2**: Service Organization Control for cloud service providers
+
+## Cryptography Basics
+- **Symmetric Encryption**: Same key for encrypt/decrypt. AES-256 is the gold standard. Fast but key distribution is a challenge.
+- **Asymmetric Encryption**: Public key encrypts, private key decrypts. RSA, ECC. Used for key exchange and digital signatures.
+- **Hashing**: One-way function producing fixed-size output. SHA-256, SHA-3, bcrypt (for passwords). Used for integrity checks.
+- **TLS/SSL**: Protocol for securing communications over networks. TLS 1.3 is current best practice.
+- **PKI (Public Key Infrastructure)**: Framework for managing digital certificates and keys.
+
+## Keamanan Siber di Indonesia
+- **BSSN (Badan Siber dan Sandi Negara)**: Lembaga pemerintah Indonesia yang bertanggung jawab atas keamanan siber nasional.
+- **UU ITE (Undang-Undang Informasi dan Transaksi Elektronik)**: Hukum yang mengatur kejahatan siber di Indonesia.
+- **Pasal 30 UU ITE**: Melarang akses ilegal ke sistem elektronik orang lain.
+- **Pasal 32 UU ITE**: Melarang pengubahan, penambahan, pengurangan transmisi data elektronik tanpa izin.
+- Etika keamanan siber: selalu dapatkan izin tertulis sebelum melakukan pengujian penetrasi.
