@@ -38,7 +38,7 @@ main.py
 
 ```bash
 git clone <your-repository-url>
-cd Hermes
+cd ProProject
 python -m venv .venv
 
 # Windows PowerShell
