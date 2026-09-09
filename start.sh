@@ -3,7 +3,7 @@
 set -e
 
 echo "═══════════════════════════════════════════════"
-echo "  Hermes Agent — Starting on RunPod"
+echo "  ProProject — Starting on RunPod"
 echo "═══════════════════════════════════════════════"
 
 # Validate critical env vars

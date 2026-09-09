@@ -1,5 +1,5 @@
 """
-agents/hermes_agent.py — Core Hermes agent: chat + presentation generation.
+agents/hermes_agent.py — Core ProProject agent: chat + presentation generation.
 
 chat()          — conversational reply with per-user memory, RAG, and auto tool-use
 handle_ppt()    — LLM builds a structured outline → Gamma generates presentation

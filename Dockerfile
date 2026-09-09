@@ -1,4 +1,4 @@
-# ── Hermes Agent — Docker image for RunPod persistent pod ─────────────────
+# ── ProProject — Docker image for RunPod persistent pod ─────────────────
 # Base: Python 3.11 slim (no GPU needed unless using HF_DEVICE=cuda)
 # For GPU support swap base to: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 FROM python:3.11-slim

@@ -1,5 +1,5 @@
 """
-main.py — Hermes Agent entry point.
+ main.py — ProProject entry point.
 
 Usage:
     python main.py
@@ -56,7 +56,7 @@ def _acquire_lock() -> None:
             os.kill(old_pid, 0)
             # If we reach here → process is alive
             print(
-                f"[ERROR] Hermes sudah berjalan (PID {old_pid}). "
+                f"[ERROR] ProProject sudah berjalan (PID {old_pid}). "
                 "Tutup dulu instance lama sebelum menjalankan yang baru.",
                 file=sys.stderr,
             )
@@ -67,7 +67,7 @@ def _acquire_lock() -> None:
         except PermissionError:
             # Windows: process exists but different session/user → treat as running
             print(
-                "[ERROR] Hermes mungkin sudah berjalan di session lain. "
+                "[ERROR] ProProject mungkin sudah berjalan di session lain. "
                 "Jalankan: taskkill /IM python.exe /F",
                 file=sys.stderr,
             )
@@ -95,7 +95,7 @@ def main() -> None:
 
 
 def _run() -> None:
-    logger.info("Starting Hermes Agent...")
+    logger.info("Starting ProProject...")
 
     if config.EMAIL_ENABLED:
         t = threading.Thread(target=_start_email_agent, daemon=True, name="email-agent")
