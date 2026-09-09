@@ -1,5 +1,5 @@
 """
-bot/telegram_bot.py — Telegram command & message handlers for Hermes.
+bot/telegram_bot.py — Telegram command & message handlers for ProProject.
 
 Commands:
   /start   — welcome message
@@ -8,7 +8,7 @@ Commands:
   /model   — show current LLM backend
   /clear   — wipe this user's chat memory
 
-Any non-command message → HermesAgent.chat()
+Any non-command message → ProProject agent chat()
 Document upload without /ppt → prompt user to use /ppt
 Supported file types: .txt, .pdf, .docx
 """
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 _agent = HermesAgent()
 
 HELP_TEXT = """
-*Hermes — AI Agent* 🤖
+*ProProject — AI Agent* 🤖
 
 *Commands:*
 • /start — welcome
@@ -138,7 +138,7 @@ Just send any message and I'll reply.
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     name = update.effective_user.first_name or "there"
     await update.message.reply_text(
-        f"Hey {name}! I'm *Hermes*, your AI assistant. ⚡\n\n"
+        f"Hey {name}! I'm *ProProject*, your AI assistant. ⚡\n\n"
         "Ask me anything, or use /ppt to generate a presentation.\n"
         "Type /help for the full command list.",
         parse_mode=ParseMode.MARKDOWN,
