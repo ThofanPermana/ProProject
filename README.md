@@ -78,6 +78,13 @@ Set `WEBUI_ENABLED=true` to start the WebUI in the container.
 
 ProProject demonstrates asynchronous Python application design, provider abstraction, environment-based configuration, modular agents, and deployment packaging. For a public demo, use synthetic documents and test accounts only. Do not publish Telegram tokens, API keys, cookies, email credentials, generated personal documents, or private conversation history.
 
-## License
+## Running TelegramBot
 
-Add a license before publishing if you want others to reuse the code. Until then, the repository should be treated as source-available for portfolio review only.
+<img width="560" height="732" alt="image" src="https://github.com/user-attachments/assets/99caa3d1-89d6-4cea-a522-d885d7b711cf" />
+
+<img width="615" height="302" alt="image" src="https://github.com/user-attachments/assets/8bdcf495-f0bf-4375-8212-b2baf7d3275d" />
+
+## Result
+<img width="602" height="876" alt="image" src="https://github.com/user-attachments/assets/552812f9-b39a-4aaf-b5f7-3d0890f7fb97" />
+
+
